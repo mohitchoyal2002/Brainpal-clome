@@ -1,0 +1,60 @@
+name: Verify and build Android
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            server/package-lock.json
+      - run: npm ci
+      - run: npm --prefix server ci
+      - run: npm run typecheck
+      - run: npm run lint -- --quiet
+      - run: npm test -- --runInBand
+      - run: npm run test:api
+
+  android:
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: actions/setup-java@v6.1.0
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+      - run: npm ci
+      - name: Android SDK
+        shell: bash
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager 'platforms;android-37.0' 'build-tools;37.0.0' 'ndk;27.1.12297006' 'cmake;3.22.1'
+          echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+      - name: Build standalone APK and test counter
+        working-directory: android
+        run: ./gradlew assembleRelease testDebugUnitTest -PreactNativeArchitectures=arm64-v8a --max-workers=2
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: BrainPal-RN-arm64
+          path: android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 14

@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">BrainPal RN</string>
+    <string name="accessibility_description">With your permission, BrainPal reads the visible layout of selected social apps to recognize short videos, count reel transitions, and show the limits you choose. It does not read passwords, perform gestures, or send screenshots or message text. Optional Jev assistance sends bounded resource IDs and scroll measurements to your configured backend. You can disable monitoring or revoke access at any time.</string>
+</resources>
