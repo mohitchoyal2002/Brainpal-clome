@@ -25,13 +25,15 @@ Output: `android/app/build/outputs/apk/release/app-release.apk`. It uses a local
 
 On first launch, agree to the layout-access disclosure, enable **BrainPal · Reels detector** in Android Accessibility, return to the app, and turn monitoring on. Usage Access, notifications and battery settings are optional. Android rebinds an enabled accessibility service; no prohibited foreground-service restart from a boot receiver is used. The detector, SQLite store, overlay and AI client run natively and do not depend on the React Native UI remaining alive.
 
+**Play Protect installation block:** the screenshot saying the app can request sensitive data matches Google's Internet-sideloading protection for Accessibility-enabled apps. See [installation and development testing](docs/INSTALLATION.md). Version 1.1.1 removes unused overlay access and limits event subscriptions to selected supported apps. This does not guarantee approval by Play Protect. The full counter still needs Accessibility; the app does not ask users to disable Play Protect.
+
 ## Connect Gemini securely
 
 1. In `server`, run `npm ci` and copy `.env.example` to an uncommitted `.env.local`.
 2. Set **GEMINI_API_KEY** on the server using a Google AI Studio key. **GEMINI_MODEL=gemini-3.5-flash-lite** is the default. It was returned by the live model list and its current pricing lists a free tier. Keep the Google project on its Free tier to avoid paid API usage. Never put the key in `App.tsx`, Android settings, Git, or the APK.
 3. Local development uses `DATABASE_URL=file:brainpal.db`. Start `npm start` inside `server`.
 4. For Vercel, deploy **server/** as the project root with a persistent **Neon Postgres** `DATABASE_URL`, plus `RATE_LIMIT_SALT`. A free Neon database requires no payment card. An existing `libsql://` URL plus `DATABASE_AUTH_TOKEN` also works. Ephemeral Vercel disk is deliberately rejected. `/api/health` reports the model and whether a key exists, without exposing it.
-5. In **You → Your private connection**, enter your backend's HTTPS origin and connect. Enable **Gemini AI assistance** and accept its disclosure. Upgrading from 1.0 requires fresh AI consent. Debug builds can use `http://10.0.2.2:8787`; the standalone APK requires HTTPS.
+5. In **You → Your private connection**, connect to the prefilled production origin `https://brainpal-native-api.vercel.app`, or enter your own backend's HTTPS origin. Enable **Gemini AI assistance** and accept its disclosure. Upgrading from 1.0 requires fresh AI consent. Debug builds can use `http://10.0.2.2:8787`; the standalone APK requires HTTPS.
 
 The server calls `POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent` using the `x-goog-api-key` header and a strict JSON schema. It does not route calls through Vercel AI Gateway.
 
@@ -78,7 +80,7 @@ cd android
 ./gradlew testDebugUnitTest -PreactNativeArchitectures=arm64-v8a
 ```
 
-The pure Kotlin detector tests cover first entry, duplicate events, horizontal swipes, comments, same-reel return, app switches, motion fallback and the native evidence boundary for AI. Backend tests exercise actual SQLite persistence and HTTP registration, auth, stat isolation, invitations, quotas, the Gemini contract and deletion. Two live Gemini sample calls passed (viewer accepted, comments rejected). This verifies the connection and response contract, not real-device accuracy. A hosted database connection and phone traces are still required for end-to-end verification.
+The pure Kotlin detector tests cover first entry, duplicate events, horizontal swipes, comments, same-reel return, app switches, motion fallback and the native evidence boundary for AI. Backend tests exercise actual SQLite persistence and HTTP registration, auth, stat isolation, invitations, quotas, the Gemini contract and deletion. The hosted production API with Neon passed registration, authentication, private friendship/stat isolation, single-use invites, account deletion and two live Gemini samples (viewer accepted, comments rejected). This verifies the connection and response contract, not real-device accuracy. Phone traces and Play Protect/device installation verification are still required.
 
 An optional design preview uses `npm run preview`; `npm run preview:build` produces `web-preview/`. This is the same React UI with an explicit Android-only banner and honest zero-count state. It does not simulate real monitoring or fabricate friend activity.
 

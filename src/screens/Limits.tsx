@@ -219,7 +219,7 @@ export function PermissionsScreen({
       title: 'Recognize reels',
       state: p.accessibility,
       required: true,
-      body: 'Settings → Accessibility → Installed apps → BrainPal → On. Reads app layouts for the counter and shows your limit overlay.',
+      body: 'Settings → Accessibility → Installed apps → BrainPal → On. Reads layouts only in your selected social apps for counting and your limit screen. No separate display-over-other-apps access is needed.',
     },
     {
       key: 'usage',
@@ -285,8 +285,9 @@ export function PermissionsScreen({
         >
           For an APK installed outside the Play Store, Android may restrict
           Accessibility. Open App info → menu ⋮ → Allow restricted settings,
-          then return to Accessibility. Samsung may also show an Auto Blocker
-          prompt. Available options depend on Android and your device.
+          then return to Accessibility. This applies after installation;
+          a Play Protect installation block needs developer testing or review.
+          Available options depend on Android and your device.
         </Text>
         <Button
           label="Open BrainPal App info"

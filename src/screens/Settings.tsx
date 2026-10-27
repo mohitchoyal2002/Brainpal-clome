@@ -205,7 +205,9 @@ export function SettingsScreen({
   run: Run;
   onPermissions: () => void;
 }) {
-  const [url, setUrl] = useState(data.backendUrl);
+  const [url, setUrl] = useState(
+    data.backendUrl || 'https://brainpal-native-api.vercel.app',
+  );
   const [name, setName] = useState('Hit');
   const [status, setStatus] = useState('');
   const [confirm, setConfirm] = useState<'clear' | 'delete' | null>(null);

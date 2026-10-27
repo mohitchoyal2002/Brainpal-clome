@@ -34,7 +34,12 @@ data class ScreenEvidence(val known: Boolean, val candidate: Boolean, val blocke
             var known=false; var obstructed=false; var nodes=0
             while(q.isNotEmpty() && nodes++<350) {
                 val n=q.removeFirst()
-                if(!n.isVisibleToUser || n.isPassword)continue
+                if(!n.isVisibleToUser || n.isPassword || n.packageName!=root.packageName)continue
+                // No input-field contents are needed to recognize a video viewer.
+                if(n.isEditable) {
+                    if(n.isFocused)obstructed=true
+                    continue
+                }
                 val bounds=Rect(); n.getBoundsInScreen(bounds)
                 val id=n.viewIdResourceName?.substringAfter(":id/").orEmpty().take(100)
                 if(id.isNotEmpty())ids.add(id)
@@ -47,7 +52,6 @@ data class ScreenEvidence(val known: Boolean, val candidate: Boolean, val blocke
                 if(listOf("caption","username","author_name","channel_name","video_title").any { id.contains(it,true) } && !n.isEditable) {
                     identity.append(id).append(text.take(160)).append(desc.take(160))
                 }
-                if(n.isFocused && n.isEditable)obstructed=true
                 for(i in 0 until n.childCount.coerceAtMost(60))n.getChild(i)?.let { q.add(it) }
             }
             val digest=if(identity.isEmpty()) "" else MessageDigest.getInstance("SHA-256").digest(identity.toString().toByteArray()).take(12).joinToString("") { "%02x".format(it) }

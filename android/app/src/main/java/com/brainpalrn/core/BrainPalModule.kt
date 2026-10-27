@@ -35,7 +35,7 @@ class BrainPalModule(private val context: ReactApplicationContext): ReactContext
         val usage=ops.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS,android.os.Process.myUid(),context.packageName)==AppOpsManager.MODE_ALLOWED
         val notifications=Build.VERSION.SDK_INT<33 || context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)==PackageManager.PERMISSION_GRANTED
         return JSONObject().put("accessibility",enabled).put("connected",ReelsAccessibilityService.instance!=null).put("usage",usage)
-            .put("overlay",Settings.canDrawOverlays(context)).put("notifications",notifications)
+            .put("notifications",notifications)
             .put("battery",context.getSystemService(PowerManager::class.java).isIgnoringBatteryOptimizations(context.packageName))
             .put("android",Build.VERSION.RELEASE).put("manufacturer",Build.MANUFACTURER)
     }
@@ -53,7 +53,6 @@ class BrainPalModule(private val context: ReactApplicationContext): ReactContext
         when(kind) {
             "accessibility" -> settings(listOf(Intent("android.settings.ACCESSIBILITY_DETAILS_SETTINGS").putExtra("android.intent.extra.COMPONENT_NAME",ComponentName(context,ReelsAccessibilityService::class.java).flattenToString()),Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)))
             "usage" -> settings(listOf(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS,pkg),Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS),Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,pkg)))
-            "overlay" -> settings(listOf(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,pkg),Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)))
             "battery" -> settings(listOf(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS),Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,pkg)))
             "notifications" -> if(Build.VERSION.SDK_INT>=33 && context.currentActivity!=null)context.currentActivity!!.requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS),41) else settings(listOf(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE,context.packageName)))
             else -> settings(listOf(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,pkg)))

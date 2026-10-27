@@ -4,13 +4,14 @@ This is a React Native Android app with a Kotlin accessibility service. Its UI a
 
 ## First launch, Android 15–17
 
-1. Install the standalone arm64 APK. It uses the separate package `com.brainpalrn`, so it can coexist with TimeLens and the original BrainPal.
+1. Install the standalone arm64 APK. It uses the separate package `com.brainpalrn`, so it can coexist with TimeLens and the original BrainPal. If Play Protect blocks Downloads installation, follow [development installation and review](INSTALLATION.md). Post-install restricted settings do not fix that installation block.
 2. Read the accessibility disclosure and explicitly agree.
 3. Open Recognize reels. Enable **BrainPal · Reels detector** under Accessibility / Installed apps. For an APK blocked by restricted settings, use App info → menu → Allow restricted settings when that option is offered by Android.
 4. Return to BrainPal. Verify Accessibility shows **Granted**, and service status says **connected**. Toggle monitoring on.
 5. Usage Access is optional. Its card must reflect the actual AppOps grant after returning from Settings. Opening an empty usage history must not be treated as permission denial.
 6. Decline notifications and battery access. Counting must still run with Accessibility alone. Permission cards must never falsely show a grant.
 7. Revoke Accessibility in Android Settings. BrainPal should show monitoring paused. Re-enable and test recovery after Android binds the service again.
+8. Only selected supported social packages should deliver detector events. Pause monitoring, remove a selected app, switch to a non-social app, and lock the phone: no counts or active overlay should remain. Switching out of a social app may take up to the one-second foreground check to hide the overlay.
 
 ## Counting, separately for each selected app
 

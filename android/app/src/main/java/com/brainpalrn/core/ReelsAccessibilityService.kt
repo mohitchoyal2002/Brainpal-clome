@@ -36,18 +36,28 @@ class ReelsAccessibilityService : AccessibilityService() {
         override fun run() {
             val now=SystemClock.elapsedRealtime()
             val unlocked=(getSystemService(POWER_SERVICE) as PowerManager).isInteractive && !(getSystemService(KEYGUARD_SERVICE) as KeyguardManager).isKeyguardLocked
-            val foreground=rootInActiveWindow?.packageName?.toString()
-            if(activeSurface && unlocked && foreground==lastApp && store.config().optBoolean("enabled")) {
+            val config=store.config()
+            val monitoring=config.optBoolean("enabled") && config.optBoolean("consent")
+            // Inspect only the foreground package while a consented video session is active.
+            val foreground=if(activeSurface && monitoring && unlocked)rootInActiveWindow?.packageName?.toString() else null
+            if(activeSurface && unlocked && foreground==lastApp && monitoring) {
                 if(tickAt>0)store.duration(lastApp,now-tickAt)
                 if(store.blocked(lastApp))overlay.showBlock() else overlay.bubble(store.count())
-            } else { activeSurface=false; overlay.hide(); engine.leave(now) }
+            } else if(activeSurface || ((!monitoring || !unlocked) && pending!=null)) { leave() }
             tickAt=now
             handler.postDelayed(this,1_000)
         }
     }
     override fun onServiceConnected() {
         instance=this; store=MonitorStore(this); backend=BackendClient(this,store); overlay=OverlayController(this,store)
+        updateEventPackages()
         handler.post(tick)
+    }
+    private fun updateEventPackages() {
+        val config=store.config()
+        val allowed=if(config.optBoolean("enabled") && config.optBoolean("consent"))MonitorStore.apps.keys.filter {store.monitored(it)} else emptyList()
+        // Android filters callbacks before they reach us. Never subscribe to arbitrary config packages.
+        serviceInfo=serviceInfo.apply {packageNames=(allowed+packageName).distinct().toTypedArray()}
     }
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if(event==null || !::store.isInitialized)return
@@ -132,7 +142,12 @@ class ReelsAccessibilityService : AccessibilityService() {
         if(reel!=null) { store.record(reel,session); BrainWidget.update(this); Nudges.milestone(this,store.count()) }
         if(!activeSurface)overlay.hide() else if(store.blocked(e.app))overlay.showBlock() else overlay.bubble(store.count())
     }
-    fun refresh() { if(!store.config().optBoolean("enabled"))leave() else if(activeSurface) { if(store.blocked(lastApp))overlay.showBlock() else overlay.bubble(store.count()) } }
+    fun refresh() {
+        updateEventPackages()
+        val config=store.config()
+        if(!config.optBoolean("enabled") || !config.optBoolean("consent") || !store.monitored(lastApp))leave()
+        else if(activeSurface) { if(store.blocked(lastApp))overlay.showBlock() else overlay.bubble(store.count()) }
+    }
     override fun onInterrupt() { leave() }
     override fun onDestroy() {
         instance=null; handler.removeCallbacksAndMessages(null)

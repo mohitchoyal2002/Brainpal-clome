@@ -22,7 +22,6 @@ export type Permissions = {
   accessibility: boolean;
   connected: boolean;
   usage: boolean;
-  overlay: boolean;
   notifications: boolean;
   battery: boolean;
   android: string;
@@ -122,7 +121,6 @@ export const emptySnapshot: Snapshot = {
     accessibility: false,
     connected: false,
     usage: false,
-    overlay: false,
     notifications: false,
     battery: false,
     android: '',
